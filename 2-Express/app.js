@@ -1,18 +1,38 @@
 const express = require('express')
-
-const app = express();
+const app = express()
+const { products } = require('./data')
 
 app.get('/', (req, res) => {
-  res.status(200).send('Home Page')
+  res.send('<h1> Home Page</h1><a href="/api/products">products</a>')
 })
-app.get('/about', (req, res) => {
-  res.status(200).send('About page')
+app.get('/api/products', (req, res) => {
+  const newProducts = products.map((product) => {
+    const { id, name, image } = product
+    return { id, name, image }
+  })
+
+  res.json(newProducts)
+})
+app.get('/api/products/:productID', (req, res) => {
+  const { productID } = req.params;
+  const singleProduct = products.find((item) => item.id === parseInt(productID));
+  if (!singleProduct) {
+    res.status(400).send('Product not found')
+  }
+  return res.json(singleProduct)
 })
 
-app.all('*',(req,res)=>{
-  res.status(404).send('<h2>Resource not found</h2>')
+app.get('/api/v1/query', (req, res) => {
+  const { search, limit } = req.query
+  let sortedProducts = [...products]
+  if (search) {
+    sortedProducts = sortedProducts.filter((item) => item.name.startsWith(search))
+  } if (limit) {
+    sortedProducts = sortedProducts.splice(0, Number(limit))
+  }
+  return res.json(sortedProducts)
 })
 
-app.listen(5000, () => [
-  console.log(`server is listening on port 5000...`)
-])
+app.listen(5000, () => {
+  console.log('Server is listening on port 5000....')
+}) 
