@@ -1,38 +1,31 @@
-const express = require('express')
-const app = express()
-const { products } = require('./data')
+const express = require('express');
+const app = express();
+const { people } = require('./data')
 
-app.get('/', (req, res) => {
-  res.send('<h1> Home Page</h1><a href="/api/products">products</a>')
+// sttaic assets
+app.use(express.static('./methods-public'))
+// parse from data
+app.use(express.urlencoded({ extended: false }))
+// parse json
+app.use(express.json())
+app.get('/api/people', (req, res) => {
+  res.status(200).send({ success: true, data: people })
 })
-app.get('/api/products', (req, res) => {
-  const newProducts = products.map((product) => {
-    const { id, name, image } = product
-    return { id, name, image }
-  })
 
-  res.json(newProducts)
-})
-app.get('/api/products/:productID', (req, res) => {
-  const { productID } = req.params;
-  const singleProduct = products.find((item) => item.id === parseInt(productID));
-  if (!singleProduct) {
-    res.status(400).send('Product not found')
+app.post('/api/people', (req, res) => {
+  const { name } = req.body
+  if (!name) {
+    return res.status(400).json({ success: false, msg: "Please provide a name" })
   }
-  return res.json(singleProduct)
+  return res.status(201).send({ success: true, person: name })
 })
-
-app.get('/api/v1/query', (req, res) => {
-  const { search, limit } = req.query
-  let sortedProducts = [...products]
-  if (search) {
-    sortedProducts = sortedProducts.filter((item) => item.name.startsWith(search))
-  } if (limit) {
-    sortedProducts = sortedProducts.splice(0, Number(limit))
+app.post('/login', (req, res) => {
+  const { name } = req.body
+  if (name) {
+    return res.status(200).send(`welcome ${name}`)
   }
-  return res.json(sortedProducts)
+  return res.status(404).send(`Please provide credentials`)
 })
-
 app.listen(5000, () => {
-  console.log('Server is listening on port 5000....')
-}) 
+  console.log('listening on port 5000...')
+})
